@@ -15,7 +15,7 @@ def parse_passenger_id(value: str) -> int:
         raise ValueError(f"Invalid passenger ID format: '{value}' (expected 'passengerN')")
     return int(match.group(1))
 
-def parse_row(raw: dict, num_floors: int) -> Row:
+def parse_row(raw: dict, num_floors: int) -> Passenger:
     try:
         time = int(raw["time"].strip())
     except ValueError:

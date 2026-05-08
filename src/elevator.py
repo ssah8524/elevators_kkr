@@ -18,21 +18,33 @@ class Elevator:
         self.current_passengers: list[Passenger] = []
 
     def _drop_off(self, time):
-        arrived_passengers = [self.current_passengers[i] for i in range(len(self.current_passengers)) if self.current_passengers[i].dest == self.cur_floor]
+        arrived_passengers = [passenger for passenger in self.current_passengers if passenger.dest == self.cur_floor]
         for passenger in arrived_passengers:
             passenger.exit_time = time + 1
 
-        self.current_passengers = [self.current_passengers[i] for i in range(len(self.current_passengers)) if
-        self.current_passengers[i].dest == self.cur_floor]
+        self.current_passengers = [passenger for passenger in self.current_passengers if passenger.dest != self.cur_floor]
 
         return
 
+    def _pick_up(self):
+        passengers_to_enter = [passenger for passenger in self.assigned_passengers if passenger.source == self.cur_floor]
+        self.current_passengers = self.current_passengers + passengers_to_enter
+
+        self.assigned_passengers = [passenger for passenger in self.assigned_passengers if passenger.source != self.cur_floor]
+
     def move(self, time):
+        self._pick_up()
         if self.status == ElevatorStatus.UP:
             if self.cur_floor < self.num_floors:
                 self.cur_floor += 1
+            else:
+                self.status = ElevatorStatus.STOPPED
         elif self.status == ElevatorStatus.DOWN:
             if self.cur_floor > 1:
                 self.cur_floor -= 1
+            else:
+                self.status = ElevatorStatus.STOPPED
 
         self._drop_off(time)
+        if not self.current_passengers:
+            self.status = ElevatorStatus.STOPPED
