@@ -1,32 +1,30 @@
-from collections import deque
-
-from numpy.ma.core import true_divide
-
-from src.elevator import Elevator
+from src.elevator import Elevator, ElevatorStatus
+from src.passenger import Passenger
 from src.scheduler.scheduler import Scheduler
 
 class RoundRobin(Scheduler):
     def __init__(self, elevator_dict: dict):
         super().__init__(elevator_dict)
         self.elevator_head = 0
+        self.waitlist: list[Passenger] = []
 
+    @staticmethod
     def _available(self, elevator: Elevator) -> bool:
-        if len(elevator.current_passengers) + len(elevator.assigned_passengers) < elevator.max_passengers:
-            return True
-
-        # Even if currently the number of current and schedules passengers may be at the limit,
-        # it could be that that number reduces before the elevator picks this user up.
-
+        committed = len(elevator.current_passengers) + len(elevator.assigned_passengers)
+        return committed < elevator.max_passengers
 
     def schedule(self, passengers_to_serve: list):
-        if not passengers_to_serve:
-            return
+        all_passengers = self.waitlist + passengers_to_serve
+        self.waitlist = []
 
-        for passenger in passengers_to_serve:
-            cur_elevator = self.elevator_head
-            if self._available(cur_elevator):
-                self.elevators[cur_elevator].assigned_passengers.append(passenger)
-                self.elevator_head += 1
-                if self.elevator_head == len(self.elevators):
-                    self.elevator_head = 0
-
+        for passenger in all_passengers:
+            assigned = False
+            for i in range(len(self.elevators)):
+                idx = (self.elevator_head + i) % len(self.elevators)
+                if self._available(self.elevators[idx]):
+                    self.elevators[idx].assigned_passengers.append(passenger)
+                    self.elevator_head = (idx + 1) % len(self.elevators)
+                    assigned = True
+                    break
+            if not assigned:
+                self.waitlist.append(passenger)
