@@ -1,7 +1,21 @@
+from dataclasses import dataclass
 
+@dataclass
 class Passenger:
-    def __init__(self, passenger_id, request_time, src_floor, dst_floor):
-        self.passenger_id = passenger_id
-        self.request_time = request_time
-        self.src_floor = src_floor
-        self.dst_floor = dst_floor
+    request_time: int
+    passenger_id: int  # extracted from id, e.g. "passenger3" -> 3
+    source: int
+    dest: int
+
+    entering_time: int
+    exit_time: int
+    total_time: int
+
+    @property
+    def wait_time(self) -> int:
+        return self.entering_time - self.request_time
+
+    @property
+    def travel_time(self) -> int:
+        return self.exit_time - self.entering_time
+

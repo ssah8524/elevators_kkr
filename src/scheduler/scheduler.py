@@ -5,5 +5,5 @@ class Scheduler(ABC):
         self.elevators = elevators
 
     @abstractmethod
-    def schedule(self, users_to_serve: list):
+    def schedule(self, passengers_to_serve: list):
         pass

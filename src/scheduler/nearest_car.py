@@ -5,5 +5,5 @@ class NearestCar(Scheduler):
     def __init__(self, elevators: list):
         super().__init__(elevators)
 
-    def schedule(self, users_to_serve: list):
+    def schedule(self, passengers_to_serve: list):
         pass

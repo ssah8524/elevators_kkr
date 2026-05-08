@@ -5,14 +5,9 @@ import numpy as np
 from dataclasses import dataclass
 from typing import Optional
 
-REQUIRED_HEADERS = {"time", "id", "source", "dest"}
+from src.passenger import Passenger
 
-@dataclass
-class Row:
-    time: int
-    passenger_id: int   # extracted from id, e.g. "passenger3" -> 3
-    source: int
-    dest: int
+REQUIRED_HEADERS = {"time", "id", "source", "dest"}
 
 def parse_passenger_id(value: str) -> int:
     match = re.fullmatch(r"passenger(\d+)", value.strip(), re.IGNORECASE)
@@ -35,14 +30,14 @@ def parse_row(raw: dict, num_floors: int) -> Row:
     passenger_number = parse_passenger_id(raw["id"])
 
 
-    return Row(
-        time=time,
+    return Passenger(
+        request_time=time,
         passenger_id=passenger_number,
         source=source,
         dest=dest
     )
 
-def parse_csv(filepath: str, num_floors: int) -> Optional[list[Row]]:
+def parse_csv(filepath: str, num_floors: int) -> Optional[list[Passenger]]:
     if not os.path.exists(filepath):
         print(f"File not found: {filepath}")
         return None
@@ -79,14 +74,14 @@ class PoissonArrivalProcess:
         values = [v for v in range(1, num_floors + 1) if v != src_floor]
         return int(self.rng.choice(values))
 
-    def simulate(self, num_slots: int, src_floor: int, num_floors: int, cur_idx: int) -> list[Row]:
+    def simulate(self, num_slots: int, src_floor: int, num_floors: int, cur_idx: int) -> list[Passenger]:
         arrivals = self._simulate_arrivals(num_slots)
         rows = []
         for time in range(num_slots):
             for _ in range(arrivals[time]):
                 rows.append(
-                    Row(
-                        time=time,
+                    Passenger(
+                        request_time=time,
                         passenger_id=cur_idx,
                         source=src_floor,
                         dest=self._simulate_destination(src_floor, num_floors)
