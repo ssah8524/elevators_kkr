@@ -24,20 +24,21 @@ if input_data is None:
         idx += len(arrivals_per_floor)
         input_data = input_data + arrivals_per_floor
 
-input_data.sort(key=lambda r: r.time)
+input_data.sort(key=lambda r: r.request_time)
 
 ## Perform Scheduling of passengers and assign them to elevators
 
 output = Output(elevator_position_file_name, num_elevators)
-elevators = [Elevator(i, num_floors, max_passengers_per_elevator, 0) for i in range(num_elevators)]
+elevators = {i: Elevator(num_floors, max_passengers_per_elevator, 0) for i in range(num_elevators)}
+
 scheduler = RoundRobin(elevators)
-for i in range(total_time_slots):
-    passengers_to_serve = [input_data[j] for j in range(input_data) if input_data[j].request_time == i]
+for t in range(total_time_slots):
+    passengers_to_serve = [passenger for passenger in input_data if passenger.request_time == t]
     scheduler.schedule(passengers_to_serve)
 
-    for elevator in elevators:
-        elevator.move(i)
-    output.log_elevator_position(elevators, i)
+    for elevator in list(elevators.values()):
+        elevator.move(t)
+    output.log_elevator_position(list(elevators.values()), t)
 
 ## Obtain passenger delay statistics
 
@@ -50,4 +51,4 @@ for passenger in input_data:
     travel_times.append(passenger.travel_time)
     total_times.append(passenger.total_time)
 
-
+output.close()

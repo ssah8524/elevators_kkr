@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Optional
 
 @dataclass
 class Passenger:
@@ -7,9 +8,9 @@ class Passenger:
     source: int
     dest: int
 
-    entering_time: int
-    exit_time: int
-    total_time: int
+    entering_time: Optional[int] = None
+    exit_time: Optional[int] = None
+    total_time: Optional[int] = None
 
     @property
     def wait_time(self) -> int:

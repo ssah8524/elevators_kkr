@@ -29,7 +29,7 @@ class Elevator:
     def _pick_up(self):
         passengers_to_enter = [passenger for passenger in self.assigned_passengers if passenger.source == self.cur_floor]
         self.current_passengers = self.current_passengers + passengers_to_enter
-
+        #TODO: add entry time for each picked up passenger
         self.assigned_passengers = [passenger for passenger in self.assigned_passengers if passenger.source != self.cur_floor]
 
     def move(self, time):

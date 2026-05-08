@@ -2,7 +2,6 @@ import csv
 import os
 import re
 import numpy as np
-from dataclasses import dataclass
 from typing import Optional
 
 from src.passenger import Passenger
