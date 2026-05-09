@@ -1,4 +1,7 @@
+import argparse
 from typing import List
+
+import numpy as np
 
 from src.io.input import PoissonArrivalProcess, parse_csv
 from src.io.output import Output
@@ -8,27 +11,40 @@ from src.elevator import Elevator
 
 
 def check_end(elevators: List[Elevator]) -> bool:
-    end = True
     for el in elevators:
         if el.current_passengers or el.assigned_passengers:
-            end = False
-            break
-    return end
+            return False
+    return True
 
-total_time_slots = 100
-num_floors = 60
-num_elevators = 10
-max_passengers_per_elevator = 10
+
+parser = argparse.ArgumentParser(description="Elevator simulation")
+parser.add_argument("--elevators", type=int, default=10, help="Number of elevators")
+parser.add_argument("--max-passengers", type=int, default=10, help="Max passengers per elevator")
+parser.add_argument("--time-slots", type=int, default=100, help="Number of time slots")
+parser.add_argument("--floors", type=int, default=60, help="Number of floors")
+parser.add_argument("--load", type=float, default=0.1, help="Passenger load per floor per time slot (stochastic mode only)")
+parser.add_argument("--input", choices=["manual", "stochastic"], default="stochastic", help="Input mode: manual (CSV file) or stochastic (Poisson)")
+parser.add_argument("--input-file", type=str, default="data/input.csv", help="Path to input CSV file (manual mode only)")
+parser.add_argument("--scheduler", choices=["round-robin", "nearest-car"], default="nearest-car", help="Scheduling algorithm to use")
+args = parser.parse_args()
+
+num_elevators = args.elevators
+max_passengers_per_elevator = args.max_passengers
+total_time_slots = args.time_slots
+num_floors = args.floors
+load_per_floor_per_slot = args.load
+
 elevator_position_file_name = 'elevator_position.csv'
-load_per_floor_per_slot = 0.1
 
 ## Create an input sequence or read the file containing the input if one is provided
 
-input_path = "data/input.csv"
-input_data = parse_csv(input_path, num_floors)
-
-if input_data is None:
-    # Generate passengers per floor according to a Poisson distribution
+if args.input == "manual":
+    if args.load != parser.get_default("load"):
+        print("Warning: --load is ignored in manual mode")
+    input_data = parse_csv(args.input_file, num_floors)
+    if input_data is None:
+        raise FileNotFoundError(f"Input file not found: {args.input_file}")
+else:
     idx = 1
     input_data = []
     for i in range(1, num_floors + 1):
@@ -43,17 +59,20 @@ input_data.sort(key=lambda r: r.request_time)
 
 output = Output(elevator_position_file_name, num_elevators)
 elevators = {i: Elevator(num_floors, max_passengers_per_elevator, 0) for i in range(num_elevators)}
+utilization = {i: [] for i in range(num_elevators)}
 
 rr_scheduler = RoundRobin(elevators)
 nc_scheduler = NearestCar(elevators)
-scheduler = nc_scheduler
+scheduler = rr_scheduler if args.scheduler == "round-robin" else nc_scheduler
+
 for t in range(total_time_slots):
     output.log_elevator_position(list(elevators.values()), t)
     passengers_to_serve = [passenger for passenger in input_data if passenger.request_time == t]
     scheduler.schedule(passengers_to_serve)
-
     for elevator in list(elevators.values()):
         elevator.move(t)
+    for i, elevator in enumerate(elevators.values()):
+        utilization[i].append(len(elevator.current_passengers))
 
 ## Continue to fulfill requests until all passengers arrive
 
@@ -62,6 +81,8 @@ while not check_end(list(elevators.values())) or scheduler.waitlist:
     scheduler.schedule([])
     for elevator in list(elevators.values()):
         elevator.move(t)
+    for i, elevator in enumerate(elevators.values()):
+        utilization[i].append(len(elevator.current_passengers))
     t += 1
 
 ## Obtain passenger delay statistics
@@ -77,6 +98,24 @@ for passenger in input_data:
 
 output.close()
 
-print(wait_times)
-print(travel_times)
-print(total_times)
+## Print statistics
+
+def print_stats(label: str, values: list):
+    arr = np.array(values)
+    print(f"\n{label}")
+    print(f"  min:    {arr.min():.1f}")
+    print(f"  max:    {arr.max():.1f}")
+    print(f"  mean:   {arr.mean():.1f}")
+    print(f"  median: {np.median(arr):.1f}")
+    print(f"  std:    {arr.std():.1f}")
+
+print_stats("Wait times", wait_times)
+print_stats("Travel times", travel_times)
+print_stats("Total times", total_times)
+
+active_fractions = [sum(1 for v in utilization[i] if v > 0) / len(utilization[i]) for i in range(num_elevators)]
+avg_loads = [np.mean(utilization[i]) for i in range(num_elevators)]
+
+print(f"\nElevator utilization")
+print(f"  avg active fraction: {np.mean(active_fractions):.2%}")
+print(f"  avg load:            {np.mean(avg_loads):.2f} passengers/tick")
