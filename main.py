@@ -8,6 +8,10 @@ from src.io.output import Output
 from src.scheduler.round_robin import RoundRobin
 from src.scheduler.nearest_car_simple import NearestCarSimple
 from src.scheduler.nearest_car import NearestCar
+from src.scheduler.nearest_idle import NearestIdle
+from src.scheduler.least_committed import LeastCommitted
+from src.scheduler.weighted_score import WeightedScore
+
 from src.elevator import Elevator
 
 
@@ -26,7 +30,7 @@ parser.add_argument("--floors", type=int, default=60, help="Number of floors")
 parser.add_argument("--load", type=float, default=0.1, help="Passenger load per floor per time slot (stochastic mode only)")
 parser.add_argument("--input", choices=["manual", "stochastic"], default="stochastic", help="Input mode: manual (CSV file) or stochastic (Poisson)")
 parser.add_argument("--input-file", type=str, default="data/input.csv", help="Path to input CSV file (manual mode only)")
-parser.add_argument("--scheduler", choices=["round-robin", "nearest-car", "nearest-car-simple"], default="round-robin", help="Scheduling algorithm to use")
+parser.add_argument("--scheduler", choices=["round-robin", "nearest-car", "nearest-car-simple", "nearest-idle", "weighted-score", "least-committed"], default="round-robin", help="Scheduling algorithm to use")
 args = parser.parse_args()
 
 num_elevators = args.elevators
@@ -70,6 +74,12 @@ if args.scheduler == "nearest-car-simple":
     scheduler = NearestCarSimple(elevators)
 elif args.scheduler == "nearest-car":
     scheduler = NearestCar(elevators)
+elif args.scheduler == "nearest-idle":
+    scheduler = NearestIdle(elevators)
+elif args.scheduler == "least-committed":
+    scheduler = LeastCommitted(elevators)
+elif args.scheduler == "weighted-score":
+    scheduler = WeightedScore(elevators)
 
 for t in range(total_time_slots):
     output.log_elevator_position(list(elevators.values()), t)
