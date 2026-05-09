@@ -3,23 +3,24 @@ from typing import List
 from src.io.input import PoissonArrivalProcess, parse_csv
 from src.io.output import Output
 from src.scheduler.round_robin import RoundRobin
+from src.scheduler.nearest_car import NearestCar
 from src.elevator import Elevator
 
 
-# def check_end(elevators: List[Elevator]) -> bool:
-#     end = True
-#     for el in elevators:
-#         if el.current_passengers or el.assigned_passengers:
-#             end = False
-#             break
-#     return end
+def check_end(elevators: List[Elevator]) -> bool:
+    end = True
+    for el in elevators:
+        if el.current_passengers or el.assigned_passengers:
+            end = False
+            break
+    return end
 
-total_time_slots = 120
+total_time_slots = 100
 num_floors = 60
-num_elevators = 3
+num_elevators = 10
 max_passengers_per_elevator = 10
 elevator_position_file_name = 'elevator_position.csv'
-load = 0.1
+load_per_floor_per_slot = 0.1
 
 ## Create an input sequence or read the file containing the input if one is provided
 
@@ -31,7 +32,7 @@ if input_data is None:
     idx = 1
     input_data = []
     for i in range(1, num_floors + 1):
-        process_per_floor = PoissonArrivalProcess(lam=load, seed=None)
+        process_per_floor = PoissonArrivalProcess(lam=load_per_floor_per_slot / num_floors, seed=None)
         arrivals_per_floor = process_per_floor.simulate(num_slots=total_time_slots, src_floor=i, num_floors=num_floors, cur_idx=idx)
         idx += len(arrivals_per_floor)
         input_data = input_data + arrivals_per_floor
@@ -43,7 +44,9 @@ input_data.sort(key=lambda r: r.request_time)
 output = Output(elevator_position_file_name, num_elevators)
 elevators = {i: Elevator(num_floors, max_passengers_per_elevator, 0) for i in range(num_elevators)}
 
-scheduler = RoundRobin(elevators)
+rr_scheduler = RoundRobin(elevators)
+nc_scheduler = NearestCar(elevators)
+scheduler = nc_scheduler
 for t in range(total_time_slots):
     output.log_elevator_position(list(elevators.values()), t)
     passengers_to_serve = [passenger for passenger in input_data if passenger.request_time == t]
@@ -54,11 +57,12 @@ for t in range(total_time_slots):
 
 ## Continue to fulfill requests until all passengers arrive
 
-# t = total_time_slots
-# while not check_end(list(elevators.values())):
-#     for elevator in list(elevators.values()):
-#         elevator.move(t)
-#     t = t + 1
+t = total_time_slots
+while not check_end(list(elevators.values())) or scheduler.waitlist:
+    scheduler.schedule([])
+    for elevator in list(elevators.values()):
+        elevator.move(t)
+    t += 1
 
 ## Obtain passenger delay statistics
 

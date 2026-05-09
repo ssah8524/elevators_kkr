@@ -56,6 +56,7 @@ class Elevator:
     def move(self, time):
         self._pick_up(time)
         self._set_direction()
+
         if self.status == ElevatorStatus.UP:
             if self.cur_floor < self.num_floors:
                 self.cur_floor += 1
@@ -64,5 +65,3 @@ class Elevator:
                 self.cur_floor -= 1
 
         self._drop_off(time)
-        if not self.current_passengers and not self.assigned_passengers:
-            self.status = ElevatorStatus.STOPPED

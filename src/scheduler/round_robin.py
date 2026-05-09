@@ -1,12 +1,10 @@
-from src.elevator import Elevator, ElevatorStatus
-from src.passenger import Passenger
+from src.elevator import Elevator
 from src.scheduler.scheduler import Scheduler
 
 class RoundRobin(Scheduler):
     def __init__(self, elevator_dict: dict):
         super().__init__(elevator_dict)
         self.elevator_head = 0
-        self.waitlist: list[Passenger] = []
 
     @staticmethod
     def _available(elevator: Elevator) -> bool:
