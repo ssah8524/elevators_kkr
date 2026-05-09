@@ -25,12 +25,6 @@ class RoundRobin(Scheduler):
                     self.elevators[idx].assigned_passengers.append(passenger)
                     self.elevator_head = (idx + 1) % len(self.elevators)
                     assigned = True
-                    # Determine direction of motion for the elevator
-                    if self.elevators[idx].status == ElevatorStatus.STOPPED:
-                        if self.elevators[idx].cur_floor > passenger.source:
-                            self.elevators[idx].status = ElevatorStatus.DOWN
-                        elif self.elevators[idx].cur_floor < passenger.source:
-                            self.elevators[idx].status = ElevatorStatus.UP
                     break
             if not assigned:
                 self.waitlist.append(passenger)

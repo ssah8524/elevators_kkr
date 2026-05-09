@@ -26,25 +26,43 @@ class Elevator:
 
         return
 
-    def _pick_up(self):
+    def _pick_up(self, time):
         passengers_to_enter = [passenger for passenger in self.assigned_passengers if passenger.source == self.cur_floor]
+        for passenger in passengers_to_enter:
+            passenger.entering_time = time
+
         self.current_passengers = self.current_passengers + passengers_to_enter
-        #TODO: add entry time for each picked up passenger
+        # Sort based on request time
+        self.current_passengers.sort(key=lambda p: p.request_time)
         self.assigned_passengers = [passenger for passenger in self.assigned_passengers if passenger.source != self.cur_floor]
 
+    def _set_direction(self):
+        # Pick the highest priority among current passengers or scheduled and set the direction based on their order
+        if self.current_passengers:
+            highest_priority_passenger = self.current_passengers[0]
+            if highest_priority_passenger.dest > self.cur_floor:
+                self.status = ElevatorStatus.UP
+            else:
+                self.status = ElevatorStatus.DOWN
+        elif self.assigned_passengers:
+            highest_priority_passenger = self.assigned_passengers[0]
+            if highest_priority_passenger.source > self.cur_floor:
+                self.status = ElevatorStatus.UP
+            else:
+                self.status = ElevatorStatus.DOWN
+        else:
+            self.status = ElevatorStatus.STOPPED
+
     def move(self, time):
-        self._pick_up()
+        self._pick_up(time)
+        self._set_direction()
         if self.status == ElevatorStatus.UP:
             if self.cur_floor < self.num_floors:
                 self.cur_floor += 1
-            else:
-                self.status = ElevatorStatus.STOPPED
         elif self.status == ElevatorStatus.DOWN:
             if self.cur_floor > 1:
                 self.cur_floor -= 1
-            else:
-                self.status = ElevatorStatus.STOPPED
 
         self._drop_off(time)
-        if not self.current_passengers:
+        if not self.current_passengers and not self.assigned_passengers:
             self.status = ElevatorStatus.STOPPED
