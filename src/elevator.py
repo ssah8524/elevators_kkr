@@ -37,21 +37,56 @@ class Elevator:
         self.assigned_passengers = [passenger for passenger in self.assigned_passengers if passenger.source != self.cur_floor]
 
     def _set_direction(self):
-        # Pick the highest priority among current passengers or scheduled and set the direction based on their order
-        if self.current_passengers:
-            highest_priority_passenger = self.current_passengers[0]
-            if highest_priority_passenger.dest > self.cur_floor:
-                self.status = ElevatorStatus.UP
-            else:
-                self.status = ElevatorStatus.DOWN
-        elif self.assigned_passengers:
-            highest_priority_passenger = self.assigned_passengers[0]
-            if highest_priority_passenger.source > self.cur_floor:
-                self.status = ElevatorStatus.UP
-            else:
-                self.status = ElevatorStatus.DOWN
-        else:
+        if not self.current_passengers and not self.assigned_passengers:
             self.status = ElevatorStatus.STOPPED
+            return
+
+        targets_above = (
+                any(p.dest > self.cur_floor for p in self.current_passengers) or
+                any(p.source > self.cur_floor for p in self.assigned_passengers)
+        )
+        targets_below = (
+                any(p.dest < self.cur_floor for p in self.current_passengers) or
+                any(p.source < self.cur_floor for p in self.assigned_passengers)
+        )
+
+        if self.status == ElevatorStatus.UP:
+            if targets_above:
+                return  # keep going up
+            elif targets_below:
+                self.status = ElevatorStatus.DOWN
+            else:
+                self.status = ElevatorStatus.STOPPED
+        elif self.status == ElevatorStatus.DOWN:
+            if targets_below:
+                return  # keep going down
+            elif targets_above:
+                self.status = ElevatorStatus.UP
+            else:
+                self.status = ElevatorStatus.STOPPED
+        else:  # STOPPED — start moving toward wherever work exists
+            if targets_above:
+                self.status = ElevatorStatus.UP
+            elif targets_below:
+                self.status = ElevatorStatus.DOWN
+
+
+        # Pick the highest priority among current passengers or scheduled and set the direction based on their order
+
+        # if self.current_passengers:
+        #     highest_priority_passenger = self.current_passengers[0]
+        #     if highest_priority_passenger.dest > self.cur_floor:
+        #         self.status = ElevatorStatus.UP
+        #     else:
+        #         self.status = ElevatorStatus.DOWN
+        # elif self.assigned_passengers:
+        #     highest_priority_passenger = self.assigned_passengers[0]
+        #     if highest_priority_passenger.source > self.cur_floor:
+        #         self.status = ElevatorStatus.UP
+        #     else:
+        #         self.status = ElevatorStatus.DOWN
+        # else:
+        #     self.status = ElevatorStatus.STOPPED
 
     def move(self, time):
         self._pick_up(time)

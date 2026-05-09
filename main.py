@@ -1,7 +1,7 @@
 import argparse
-from typing import List
-
+import random
 import numpy as np
+from typing import List
 
 from src.io.input import PoissonArrivalProcess, parse_csv
 from src.io.output import Output
@@ -59,7 +59,10 @@ input_data.sort(key=lambda r: r.request_time)
 ## Perform Scheduling of passengers and assign them to elevators
 
 output = Output(elevator_position_file_name, num_elevators)
-elevators = {i: Elevator(num_floors, max_passengers_per_elevator, 0) for i in range(num_elevators)}
+if args.input == "manual":
+    elevators = {i: Elevator(num_floors, max_passengers_per_elevator, 1) for i in range(num_elevators)}
+else:
+    elevators = {i: Elevator(num_floors, max_passengers_per_elevator, random.randint(1, num_floors)) for i in range(num_elevators)}
 utilization = {i: [] for i in range(num_elevators)}
 
 scheduler = RoundRobin(elevators)
