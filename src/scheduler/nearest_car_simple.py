@@ -6,9 +6,11 @@ from src.elevator import Elevator, ElevatorStatus
 
 class NearestCarSimple(Scheduler):
     def __init__(self, elevator_dict: dict):
+        """Initialise the scheduler with the elevator fleet."""
         super().__init__(elevator_dict)
 
     def _find_nearest_elevator(self, passenger: Passenger) -> Optional[Elevator]:
+        """Return the available elevator closest to the passenger's source floor, breaking ties by current load."""
         available = [el for el in self.elevators.values() if self._available(el)]
         if not available:
             return None
@@ -19,6 +21,7 @@ class NearestCarSimple(Scheduler):
         ))
 
     def schedule(self, passengers_to_serve: list):
+        """Assign each passenger to the closest available elevator by raw floor distance."""
         all_passengers = self.waitlist + passengers_to_serve
         self.waitlist = []
 

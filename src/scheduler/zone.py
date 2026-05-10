@@ -11,6 +11,7 @@ class ZoneScheduler(Scheduler):
     """
 
     def __init__(self, elevator_dict: dict):
+        """Divide the building into equal floor zones and map each zone to one elevator."""
         super().__init__(elevator_dict)
         n = len(elevator_dict)
         num_floors = elevator_dict[0].num_floors
@@ -25,12 +26,14 @@ class ZoneScheduler(Scheduler):
         ]
 
     def _elevator_for(self, floor: int) -> Elevator:
+        """Return the elevator responsible for the zone containing the given floor."""
         for i, (lo, hi) in enumerate(self._zone_bounds):
             if lo <= floor <= hi:
                 return self._zone_map[i]
         return self._zone_map[len(self._zone_map) - 1]
 
     def schedule(self, passengers_to_serve: list):
+        """Assign each passenger to their zone elevator, waitlisting those whose elevator is full."""
         all_passengers = self.waitlist + passengers_to_serve
         self.waitlist = []
 

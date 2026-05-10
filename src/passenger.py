@@ -14,9 +14,11 @@ class Passenger:
 
     @property
     def wait_time(self) -> int:
+        """Ticks between request and boarding."""
         return self.entering_time - self.request_time
 
     @property
     def travel_time(self) -> int:
+        """Ticks between boarding and alighting."""
         return self.exit_time - self.entering_time
 

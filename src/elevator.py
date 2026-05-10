@@ -10,6 +10,7 @@ class ElevatorStatus(Enum):
 
 class Elevator:
     def __init__(self, num_floors: int, max_passengers: int, cur_floor: int, status: ElevatorStatus=ElevatorStatus.STOPPED):
+        """Initialise an elevator at cur_floor with the given capacity and building height."""
         self.max_passengers = max_passengers
         self.cur_floor = cur_floor
         self.num_floors = num_floors
@@ -18,6 +19,7 @@ class Elevator:
         self.current_passengers: list[Passenger] = []
 
     def _drop_off(self, time):
+        """Record exit_time for any on-board passenger whose destination matches the current floor."""
         arrived_passengers = [passenger for passenger in self.current_passengers if passenger.dest == self.cur_floor]
         for passenger in arrived_passengers:
             passenger.exit_time = time + 1
@@ -27,6 +29,7 @@ class Elevator:
         return
 
     def _pick_up(self, time):
+        """Board any assigned passengers whose source floor matches the current floor."""
         passengers_to_enter = [passenger for passenger in self.assigned_passengers if passenger.source == self.cur_floor]
         for passenger in passengers_to_enter:
             passenger.entering_time = time
@@ -37,6 +40,7 @@ class Elevator:
         self.assigned_passengers = [passenger for passenger in self.assigned_passengers if passenger.source != self.cur_floor]
 
     def _set_direction(self):
+        """Apply the LOOK policy: continue in the current direction while targets remain ahead, then reverse."""
         if not self.current_passengers and not self.assigned_passengers:
             self.status = ElevatorStatus.STOPPED
             return
@@ -71,6 +75,7 @@ class Elevator:
                 self.status = ElevatorStatus.DOWN
 
     def move(self, time):
+        """Advance the elevator one tick: board waiting passengers, update direction, move one floor, drop off arrivals."""
         self._pick_up(time)
         self._set_direction()
 

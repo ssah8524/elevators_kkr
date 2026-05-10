@@ -7,9 +7,11 @@ from src.elevator import Elevator, ElevatorStatus
 
 class NearestIdle(NearestCar):
     def __init__(self, elevator_dict: dict):
+        """Initialise the scheduler with the elevator fleet."""
         super().__init__(elevator_dict)
 
     def _find_best_elevator(self, passenger: Passenger) -> Optional[Elevator]:
+        """Prefer the nearest idle elevator; fall back to NearestCar selection when none are idle."""
         available = [el for el in self.elevators.values() if self._available(el)]
         if not available:
             return None
@@ -21,6 +23,7 @@ class NearestIdle(NearestCar):
         return super()._find_best_elevator(passenger)
 
     def schedule(self, passengers_to_serve: list):
+        """Assign each passenger to the nearest idle car, falling back to nearest moving car when no idle cars are available."""
         all_passengers = self.waitlist + passengers_to_serve
         self.waitlist = []
 

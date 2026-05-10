@@ -6,10 +6,12 @@ from src.elevator import Elevator, ElevatorStatus
 
 class NearestCar(Scheduler):
     def __init__(self, elevator_dict: dict):
+        """Initialise the scheduler with the elevator fleet."""
         super().__init__(elevator_dict)
 
     @staticmethod
     def _estimated_travel_time(el: Elevator, passenger: Passenger) -> int:
+        """Estimate ticks from pickup to delivery, accounting for the elevator's current direction and turn floor."""
         all_dests = [p.dest for p in el.current_passengers + el.assigned_passengers]
 
         if el.status == ElevatorStatus.UP or passenger.source > el.cur_floor:
@@ -26,6 +28,7 @@ class NearestCar(Scheduler):
             return (passenger.source - turn_floor) + (passenger.dest - turn_floor)
 
     def _find_best_elevator(self, passenger: Passenger) -> Optional[Elevator]:
+        """Return the available elevator with the shortest effective pickup distance, preferring those already heading toward the passenger."""
         available = [el for el in self.elevators.values() if self._available(el)]
         if not available:
             return None
@@ -62,6 +65,7 @@ class NearestCar(Scheduler):
         ))
 
     def schedule(self, passengers_to_serve: list):
+        """Assign each passenger to the nearest available car, waitlisting any that cannot be served."""
         all_passengers = self.waitlist + passengers_to_serve
         self.waitlist = []
 

@@ -13,12 +13,14 @@ class WeightedScore(Scheduler):
     """
 
     def __init__(self, elevator_dict: dict, alpha: float = 1.0, beta: float = 1.0):
+        """Initialise with tunable weights: alpha scales pickup time, beta scales committed passenger count."""
         super().__init__(elevator_dict)
         self.alpha = alpha
         self.beta = beta
 
     @staticmethod
     def _estimated_pickup_time(el: Elevator, passenger: Passenger) -> int:
+        """Estimate ticks until the elevator reaches the passenger's source floor."""
         if el.status == ElevatorStatus.STOPPED:
             return abs(el.cur_floor - passenger.source)
 
@@ -36,17 +38,20 @@ class WeightedScore(Scheduler):
             return (el.cur_floor - turn_floor) + (passenger.source - turn_floor)
 
     def _score(self, el: Elevator, passenger: Passenger) -> float:
+        """Compute alpha * pickup_time + beta * committed_count for a given elevator and passenger."""
         pickup_time = self._estimated_pickup_time(el, passenger)
         committed = len(el.current_passengers) + len(el.assigned_passengers)
         return self.alpha * pickup_time + self.beta * committed
 
     def _find_best_elevator(self, passenger: Passenger) -> Optional[Elevator]:
+        """Return the available elevator with the lowest weighted score."""
         available = [el for el in self.elevators.values() if self._available(el)]
         if not available:
             return None
         return min(available, key=lambda el: self._score(el, passenger))
 
     def schedule(self, passengers_to_serve: list):
+        """Assign each passenger to the elevator with the lowest weighted score."""
         all_passengers = self.waitlist + passengers_to_serve
         self.waitlist = []
 

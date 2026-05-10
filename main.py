@@ -16,6 +16,7 @@ from src.elevator import Elevator
 
 
 def check_end(elevators: List[Elevator]) -> bool:
+    """Return True when every elevator has no on-board or assigned passengers remaining."""
     for el in elevators:
         if el.current_passengers or el.assigned_passengers:
             return False
@@ -117,6 +118,7 @@ output.close()
 ## Print statistics
 
 def print_stats(label: str, values: list):
+    """Print min, max, mean, median, and std for a list of numeric values."""
     arr = np.array(values)
     print(f"\n{label}")
     print(f"  min:    {arr.min():.1f}")
