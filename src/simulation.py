@@ -1,6 +1,7 @@
 import copy
 from typing import Type
 import numpy as np
+import random
 
 from src.elevator import Elevator
 from src.passenger import Passenger
@@ -44,7 +45,7 @@ def run_simulation(
     """
     passengers = copy.deepcopy(input_data)
 
-    elevators = {i: Elevator(num_floors, max_passengers, 0) for i in range(num_elevators)}
+    elevators = {i: Elevator(num_floors, max_passengers, random.randint(1, num_floors)) for i in range(num_elevators)}
     scheduler = scheduler_class(elevators)
     utilization = {i: [] for i in range(num_elevators)}
     positions = {i: [] for i in range(num_elevators)}
