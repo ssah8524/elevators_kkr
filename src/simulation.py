@@ -38,14 +38,17 @@ def run_simulation(
     total_time_slots: int,
     scheduler_class: Type[Scheduler],
     input_data: list[Passenger],
+    start_floor: int = None,
 ) -> dict:
     """
     Run a full simulation and return statistics and trajectory data.
     Deep-copies input_data so the same dataset can be safely reused across algorithms.
+    start_floor: fixed starting floor for all elevators; None = random uniform [1, num_floors].
     """
     passengers = copy.deepcopy(input_data)
 
-    elevators = {i: Elevator(num_floors, max_passengers, random.randint(1, num_floors)) for i in range(num_elevators)}
+    floor_fn = (lambda: start_floor) if start_floor is not None else (lambda: random.randint(1, num_floors))
+    elevators = {i: Elevator(num_floors, max_passengers, floor_fn()) for i in range(num_elevators)}
     scheduler = scheduler_class(elevators)
     utilization = {i: [] for i in range(num_elevators)}
     positions = {i: [] for i in range(num_elevators)}
