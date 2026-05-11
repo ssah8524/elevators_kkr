@@ -52,7 +52,7 @@ Options:
   --load F               Passengers per floor per tick, e.g. 0.1 (stochastic only)
   --input {manual,stochastic}
   --input-file PATH      CSV file path (manual mode only)
-  --scheduler {round-robin,nearest-car}
+  --scheduler {round-robin, nearest-car, nearest-car-simple, nearest-idle, weighted-score, least-committed}
 ```
 
 **Manual input** (from CSV):
